@@ -1,0 +1,59 @@
+services:
+  # configuración del cluster de postgres
+  postgres_1:
+    image: postgres:16
+    container_name: postgres_1
+    ports:
+      - "${DB_PORT}:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+      REPLICA_USER: ${REPLICA_USER}
+      REPLICA_PASSWORD: ${REPLICA_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    command: postgres -c wal_level=replica -c hot_standby=on -c max_wal_senders=10
+      -c max_replication_slots=10 -c hot_standby_feedback=on -c
+      wal_keep_size=128MB
+    volumes:
+      - postgres_1:/var_lib/postgtresql:z
+      - ./init_postgres.sh:/docker-entrypoint-initdb.d/init_postgres.sh:z
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${DB_NAME}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  # configuración de la replica 1
+  postgres_2:
+    image: postgres:16
+    container_name: postgres_2
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    entrypoint: [ "bash", "/init_rep.sh" ]
+    volumes:
+      - postgres_2:/var/lib/postgresql:z
+      - ./init_rep.sh:/init_rep.sh:z
+    depends_on:
+      - postgres_1
+  # configuración de la replica 2
+  postgres_3:
+    image: postgres:16
+    container_name: postgres_3
+    ports:
+      - "5435:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    entrypoint: [ "bash", "/init_rep.sh" ]
+    volumes:
+      - postgres_3:/var/lib/postgresql:z
+      - ./init_rep.sh:/init_rep.sh:z
+    depends_on:
+      - postgres_1
+volumes:
+  postgres_1:
+  postgres_2:
+  postgres_3:
