@@ -85,7 +85,6 @@ The `docker-compose.yml` defines three PostgreSQL services:
 
 ```bash
 cluster-PostgreSQL-Docker/
-├── .env.example        # Template for environment variables
 ├── docker-compose.yml  # Cluster service orchestration
 ├── init_postgres.sh    # Initialization script for the primary node
 ├── init_rep.sh         # Initialization script for the replica nodes
