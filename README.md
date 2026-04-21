@@ -106,11 +106,51 @@ cluster-PostgreSQL-Docker/
 ## ❓ FAQ
 
 *   **How do I test replication?**
-    1.  Connect to the primary node (e.g. `psql -h localhost -p 5432 -U admin -d cluster_db`).
-    2.  Create a table: `CREATE TABLE test (id INT);`.
-    3.  Connect to one of the replicas (e.g. `psql -h localhost -p 5434 -U admin -d cluster_db`).
-    4.  Verify the table exists: `\dt`. You should see the `test` table.
-    5.  Try writing to the replica: `INSERT INTO test VALUES (1);`. You will receive an error, since replicas are read-only.
+    You can test the replication by writing data to the primary node and then reading it from a replica.
+
+    1.  **Connect to the Primary Node (`postgres_1`)**
+
+        Open your terminal and run this command to access the interactive `psql` console in the primary container.
+        ```bash
+        docker exec -it postgres_1 psql -U ${POSTGRES_USER} -d ${DB_NAME}
+        ```
+        *Note: You might need to replace `${POSTGRES_USER}` and `${DB_NAME}` with the actual values from your `.env` file.*
+
+    2.  **Create a Table and Insert Data**
+
+        Inside the `psql` console, create a test table and insert a row:
+        ```sql
+        CREATE TABLE users_test (
+            id SERIAL PRIMARY KEY,
+            username VARCHAR(50) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        INSERT INTO users_test (username) VALUES ('test_user_from_primary');
+        ```
+        You should see `CREATE TABLE` and `INSERT 0 1` confirmations. Type `\q` and press Enter to exit.
+
+    3.  **Connect to a Replica (`postgres_2`)**
+
+        Now, connect to a replica to verify that the data was replicated.
+        ```bash
+        docker exec -it postgres_2 psql -U ${POSTGRES_USER} -d ${DB_NAME}
+        ```
+
+    4.  **Verify Replication and Read-Only Mode**
+
+        Inside the replica's `psql` console, query the table:
+        ```sql
+        SELECT * FROM users_test;
+        ```
+        You will see the data you inserted on the primary node. Now, try to write to the replica:
+        ```sql
+        INSERT INTO users_test (username) VALUES ('trying_to_write_on_replica');
+        ```
+        The database will stop you with an error, confirming that replicas are read-only:
+        `ERROR: cannot execute INSERT in a read-only transaction`
+
+        This confirms your cluster is working correctly. Type `\q` to exit.
 
 *   **What is Streaming Replication?**
     It is a replication method in PostgreSQL where standby servers (replicas) connect to the primary and receive WAL changes in near real-time.
