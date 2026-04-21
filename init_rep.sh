@@ -9,7 +9,7 @@ if [ ! -s /var/lib/postgresql/data/PG_VERSION ]; then
   rm -rf /var/lib/postgresql/data/*
   
   # Bucle de reintento en caso de desconexión del maestro
-  until PGPASSWORD=${REPLICA_PASSWORD} gosu postgres pg_basebackup -h pg_primary -U ${REPLICA_USER} -D /var/lib/postgresql/data -R -X stream -c fast; do
+  until PGPASSWORD=${REPLICA_PASSWORD} gosu postgres pg_basebackup -h postgres_1 -U ${REPLICA_USER} -D /var/lib/postgresql/data -R -X stream -c fast; do
     echo 'Fallo en la copia, limpiando basura y reintentando...'
     rm -rf /var/lib/postgresql/data/*
     sleep 3
