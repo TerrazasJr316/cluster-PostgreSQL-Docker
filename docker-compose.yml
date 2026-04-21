@@ -32,6 +32,8 @@ services:
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      REPLICA_USER: ${REPLICA_USER}
+      REPLICA_PASSWORD: ${REPLICA_PASSWORD}
     entrypoint: [ "bash", "/init_rep.sh" ]
     volumes:
       - postgres_2:/var/lib/postgresql:z
@@ -47,6 +49,8 @@ services:
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      REPLICA_USER: ${REPLICA_USER}
+      REPLICA_PASSWORD: ${REPLICA_PASSWORD}
     entrypoint: [ "bash", "/init_rep.sh" ]
     volumes:
       - postgres_3:/var/lib/postgresql:z
